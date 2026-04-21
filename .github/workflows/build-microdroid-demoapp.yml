@@ -16,7 +16,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 360
+    timeout-minutes: 180
+    permissions:
+      contents: read
     env:
       WORKDIR: ${{ github.workspace }}/aosp
     steps:
@@ -60,6 +62,6 @@ jobs:
         with:
           name: MicrodroidDemoApp-apk
           path: |
-            aosp/out/dist/MicrodroidDemoApp.apk
-            aosp/out/dist/*Microdroid*.apk
+            ${{ env.WORKDIR }}/out/dist/MicrodroidDemoApp.apk
+            ${{ env.WORKDIR }}/out/dist/*Microdroid*.apk
           if-no-files-found: warn
