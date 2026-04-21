@@ -8,9 +8,13 @@ on:
         required: true
         default: android16-release
       runner_label:
-        description: Runner label (use self-hosted/larger runners for full AOSP builds)
+        description: Runner labels JSON (allowlisted)
+        type: choice
         required: true
-        default: ubuntu-24.04
+        default: '["ubuntu-24.04"]'
+        options:
+          - '["ubuntu-24.04"]'
+          - '["self-hosted","linux","x64","large"]'
   push:
     branches:
       - main
@@ -19,7 +23,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ github.event.inputs.runner_label || 'ubuntu-24.04' }}
+    runs-on: ${{ fromJSON(github.event.inputs.runner_label || '["ubuntu-24.04"]') }}
     timeout-minutes: 360
     permissions:
       contents: read
@@ -32,7 +36,7 @@ jobs:
       - name: Free disk space on GitHub-hosted runners
         if: ${{ runner.environment == 'github-hosted' }}
         run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache || true
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android || true
           df -h
 
       - name: Install build dependencies
