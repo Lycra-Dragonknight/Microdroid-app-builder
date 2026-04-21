@@ -7,6 +7,10 @@ on:
         description: Android branch/tag to build from
         required: true
         default: android16-release
+      runner_label:
+        description: Runner label (use self-hosted/larger runners for full AOSP builds)
+        required: true
+        default: ubuntu-24.04
   push:
     branches:
       - main
@@ -15,7 +19,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ github.event.inputs.runner_label || 'ubuntu-24.04' }}
     timeout-minutes: 360
     permissions:
       contents: read
@@ -24,6 +28,12 @@ jobs:
     steps:
       - name: Checkout this repository
         uses: actions/checkout@v4
+
+      - name: Free disk space on GitHub-hosted runners
+        if: ${{ runner.environment == 'github-hosted' }}
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache || true
+          df -h
 
       - name: Install build dependencies
         run: |
@@ -40,20 +50,22 @@ jobs:
           chmod +x "${HOME}/bin/repo"
           echo "${HOME}/bin" >> "${GITHUB_PATH}"
 
+      - name: Prepare AOSP workspace
+        run: mkdir -p "${WORKDIR}"
+
       - name: Sync AOSP sources
+        working-directory: ${{ env.WORKDIR }}
         env:
           ANDROID_BRANCH: ${{ github.event.inputs.android_branch || 'android16-release' }}
         run: |
           set -euxo pipefail
-          mkdir -p "${WORKDIR}"
-          cd "${WORKDIR}"
-          repo init -u https://android.googlesource.com/platform/manifest -b "${ANDROID_BRANCH}"
-          repo sync -c -j"$(nproc)" --fail-fast --no-clone-bundle --no-tags
+          repo init -u https://android.googlesource.com/platform/manifest -b "${ANDROID_BRANCH}" --partial-clone --clone-filter=blob:limit=10M
+          repo sync -c -j"$(nproc)" --fail-fast --no-clone-bundle --no-tags --optimized-fetch --prune
 
       - name: Build MicrodroidDemoApp
+        working-directory: ${{ env.WORKDIR }}
         run: |
           set -euxo pipefail
-          cd "${WORKDIR}"
           source build/envsetup.sh
           UNBUNDLED_BUILD_SDKS_FROM_SOURCE=true TARGET_BUILD_APPS=MicrodroidDemoApp m -j"$(nproc)" apps_only dist
 
