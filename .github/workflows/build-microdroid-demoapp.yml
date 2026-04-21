@@ -1,0 +1,67 @@
+name: Build MicrodroidDemoApp (android16-release)
+
+on:
+  workflow_dispatch:
+    inputs:
+      android_branch:
+        description: Android branch/tag to build from
+        required: true
+        default: android16-release
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/build-microdroid-demoapp.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    permissions:
+      contents: read
+    env:
+      WORKDIR: ${{ github.workspace }}/aosp
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev \
+            libc6-dev-i386 x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev \
+            libxml2-utils xsltproc unzip fontconfig python3
+
+      - name: Install repo tool
+        run: |
+          mkdir -p "${HOME}/bin"
+          curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o "${HOME}/bin/repo"
+          chmod +x "${HOME}/bin/repo"
+          echo "${HOME}/bin" >> "${GITHUB_PATH}"
+
+      - name: Sync AOSP sources
+        env:
+          ANDROID_BRANCH: ${{ github.event.inputs.android_branch || 'android16-release' }}
+        run: |
+          set -euxo pipefail
+          mkdir -p "${WORKDIR}"
+          cd "${WORKDIR}"
+          repo init -u https://android.googlesource.com/platform/manifest -b "${ANDROID_BRANCH}"
+          repo sync -c -j"$(nproc)" --fail-fast --no-clone-bundle --no-tags
+
+      - name: Build MicrodroidDemoApp
+        run: |
+          set -euxo pipefail
+          cd "${WORKDIR}"
+          source build/envsetup.sh
+          UNBUNDLED_BUILD_SDKS_FROM_SOURCE=true TARGET_BUILD_APPS=MicrodroidDemoApp m -j"$(nproc)" apps_only dist
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MicrodroidDemoApp-apk
+          path: |
+            ${{ env.WORKDIR }}/out/dist/MicrodroidDemoApp.apk
+            ${{ env.WORKDIR }}/out/dist/*Microdroid*.apk
+          if-no-files-found: warn
