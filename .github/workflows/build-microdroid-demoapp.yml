@@ -79,14 +79,13 @@ jobs:
           ANDROID_BRANCH: ${{ github.event.inputs.android_branch || 'android16-release' }}
         run: |
           set -euxo pipefail
-          repo init -u https://android.googlesource.com/platform/manifest -b "${ANDROID_BRANCH}" --partial-clone --clone-filter=blob:limit=10M
-          repo sync -c -j"$(nproc)" --fail-fast --no-clone-bundle --no-tags --optimized-fetch --prune
+          git clone https://android.googlesource.com/platform/packages/modules/Virtualization -b android16-qpr2-release
 
       - name: Build MicrodroidDemoApp
         working-directory: ${{ env.WORKDIR }}
         run: |
           set -euxo pipefail
-          source build/envsetup.sh
+          cd android/MicrodroidDemoApp/
           UNBUNDLED_BUILD_SDKS_FROM_SOURCE=true TARGET_BUILD_APPS=MicrodroidDemoApp m -j"$(nproc)" apps_only dist
 
       - name: Upload APK artifact
