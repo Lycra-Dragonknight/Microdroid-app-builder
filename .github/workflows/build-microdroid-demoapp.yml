@@ -35,7 +35,7 @@ jobs:
 
       - name: Free Disk Space
         uses: endersonmenezes/free-disk-space@v3
-        if: false
+        if: ${{ runner.environment == 'github-hosted' }}
         with:
           remove_android: true
           remove_dotnet: true
