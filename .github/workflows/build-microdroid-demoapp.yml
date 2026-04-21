@@ -6,7 +6,7 @@ on:
       android_branch:
         description: Android branch/tag to build from
         required: true
-        default: android16-release
+        default: android-latest-release
       runner_label:
         description: Runner labels JSON (allowlisted)
         type: choice
@@ -76,17 +76,22 @@ jobs:
       - name: Sync AOSP sources
         working-directory: ${{ env.WORKDIR }}
         env:
-          ANDROID_BRANCH: ${{ github.event.inputs.android_branch || 'android16-release' }}
+          ANDROID_BRANCH: ${{ github.event.inputs.android_branch || 'android-latest-release' }}
         run: |
           set -euxo pipefail
-          repo init -u https://android.googlesource.com/platform/manifest -b "${ANDROID_BRANCH}" --partial-clone --clone-filter=blob:limit=10M
-          repo sync -c -j"$(nproc)" --fail-fast --no-clone-bundle --no-tags --optimized-fetch --prune
+          repo init -u https://android.googlesource.com/platform/manifest -b "${ANDROID_BRANCH}"
+          repo sync -c -j$(nproc) --fail-fast --no-clone-bundle --no-tags --optimized-fetch --prune
 
       - name: Build MicrodroidDemoApp
         working-directory: ${{ env.WORKDIR }}
         run: |
           set -euxo pipefail
           source build/envsetup.sh
+          lunch aosp_cf_x86_64_phone-userdebug
+          m
+          cvd start
+          git clone https://android.googlesource.com/platform/packages/modules/Virtualization -b android16-qpr2-release
+          cd Virtualization/android/MicrodroidDemoApp
           UNBUNDLED_BUILD_SDKS_FROM_SOURCE=true TARGET_BUILD_APPS=MicrodroidDemoApp m -j"$(nproc)" apps_only dist
 
       - name: Upload APK artifact
