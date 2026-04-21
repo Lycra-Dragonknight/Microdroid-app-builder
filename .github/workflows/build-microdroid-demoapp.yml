@@ -16,7 +16,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
+    timeout-minutes: 360
     permissions:
       contents: read
     env:
@@ -40,7 +40,7 @@ jobs:
           chmod +x "${HOME}/bin/repo"
           echo "${HOME}/bin" >> "${GITHUB_PATH}"
 
-      - name: Sync AOSP (android16)
+      - name: Sync AOSP sources
         env:
           ANDROID_BRANCH: ${{ github.event.inputs.android_branch || 'android16-release' }}
         run: |
