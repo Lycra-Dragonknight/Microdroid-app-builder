@@ -85,13 +85,18 @@ jobs:
       - name: Build MicrodroidDemoApp
         working-directory: ${{ env.WORKDIR }}
         run: |
-          set -euxo pipefail
+          set -eo pipefail
           export TOP="$PWD"
+      
+          # Prevent unbound-variable crashes in AOSP envsetup with newer branches.
           export ANDROID_GLOBAL_BUILD_PATHS="${ANDROID_GLOBAL_BUILD_PATHS:-}"
-          set +u
+          export ANDROID_LUNCH_BUILD_PATHS="${ANDROID_LUNCH_BUILD_PATHS:-}"
+      
           source build/envsetup.sh
-          set -u
           lunch aosp_cf_x86_64_phone-trunk_staging-userdebug
+      
+          # Re-enable nounset after envsetup/lunch if desired.
+          set -u
           UNBUNDLED_BUILD_SDKS_FROM_SOURCE=true TARGET_BUILD_APPS=MicrodroidDemoApp m -j"$(nproc)" apps_only dist
     
       - name: Upload APK artifact
