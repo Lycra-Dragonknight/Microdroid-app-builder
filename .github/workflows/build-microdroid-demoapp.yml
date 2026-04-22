@@ -80,7 +80,7 @@ jobs:
         run: |
           set -euxo pipefail
           repo init -u https://android.googlesource.com/platform/manifest -b "${ANDROID_BRANCH}" --depth=1
-          repo build/make build/soong build/blueprint packages/modules/Virtualization --trace sync -c -j"$(nproc --all)" --fail-fast --no-tags --force-sync --no-clone-bundle --optimized-fetch --prune --current-branch 
+          repo sync -c build/make build/soong build/blueprint packages/modules/Virtualization
 
       - name: Build MicrodroidDemoApp
         working-directory: ${{ env.WORKDIR }}
