@@ -91,11 +91,6 @@ jobs:
           set +u
           source build/envsetup.sh
           set -u
-          lunch aosp_cf_x86_64_phone-android16-release-userdebug
-          m
-          cvd start
-          git clone https://android.googlesource.com/platform/packages/modules/Virtualization -b android16-qpr2-release
-          cd Virtualization/android/MicrodroidDemoApp
           UNBUNDLED_BUILD_SDKS_FROM_SOURCE=true TARGET_BUILD_APPS=MicrodroidDemoApp m -j"$(nproc)" apps_only dist
     
       - name: Upload APK artifact
