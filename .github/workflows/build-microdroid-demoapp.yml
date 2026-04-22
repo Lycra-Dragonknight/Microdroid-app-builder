@@ -79,12 +79,12 @@ jobs:
           ANDROID_BRANCH: ${{ github.event.inputs.android_branch || 'android-latest-release' }}
         run: |
           set -euxo pipefail
-          repo init -u https://android.googlesource.com/platform/manifest -b android-latest-release --depth=1 --partial-clone --clone-filter=blob:none
+          repo init -u https://android.googlesource.com/platform/manifest -b "${ANDROID_BRANCH}" --depth=1 --partial-clone --clone-filter=blob:none
           repo sync -c -j$(nproc) \
           build/make build/soong build/blueprint build/release \
           packages/modules/Virtualization \
           device/google/cuttlefish device/google/cuttlefish_prebuilts \
-          prebuilts/build-tools prebuilts/go
+          prebuilts/build-tools prebuilts/go/linux-x86
           
       - name: Build MicrodroidDemoApp
         working-directory: ${{ env.WORKDIR }}
