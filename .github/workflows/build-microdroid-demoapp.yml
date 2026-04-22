@@ -87,6 +87,7 @@ jobs:
         run: |
           set -euxo pipefail
           export TOP="$PWD"
+          export ANDROID_GLOBAL_BUILD_PATHS="${ANDROID_GLOBAL_BUILD_PATHS:-}"
           source build/envsetup.sh
           lunch aosp_cf_x86_64_phone-userdebug
           m
