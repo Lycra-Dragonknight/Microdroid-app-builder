@@ -65,10 +65,10 @@ jobs:
 
       - name: Install repo tool
         run: |
-          mkdir -p "${HOME}/bin"
-          curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o "${HOME}/bin/repo"
-          chmod +x "${HOME}/bin/repo"
-          echo "${HOME}/bin" >> "${GITHUB_PATH}"
+          mkdir -p "$GITHUB_WORKSPACE/bin"
+          curl -L https://storage.googleapis.com/git-repo-downloads/repo -o "$GITHUB_WORKSPACE/bin/repo"
+          chmod +x "$GITHUB_WORKSPACE/bin/repo"
+          echo "$GITHUB_WORKSPACE/bin" >> "$GITHUB_PATH"
 
       - name: Prepare AOSP workspace
         run: mkdir -p "${WORKDIR}"
@@ -79,8 +79,8 @@ jobs:
           ANDROID_BRANCH: ${{ github.event.inputs.android_branch || 'android-latest-release' }}
         run: |
           set -euxo pipefail
-          repo init -u https://android.googlesource.com/platform/manifest -b "${ANDROID_BRANCH}"
-          repo sync -c -j$(nproc) --fail-fast --no-clone-bundle --no-tags --optimized-fetch --prune
+          repo init -u https://android.googlesource.com/platform/manifest -b "${ANDROID_BRANCH}" --depth=1
+          repo build/make build/soong build/blueprint packages/modules/Virtualization --trace sync -c -j"$(nproc --all)" --fail-fast --no-tags --force-sync --no-clone-bundle --optimized-fetch --prune --current-branch 
 
       - name: Build MicrodroidDemoApp
         working-directory: ${{ env.WORKDIR }}
